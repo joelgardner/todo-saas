@@ -1,10 +1,10 @@
 # JS Web App
-## Prologue
+## Preface
 This is part one in a series of posts I'll write to show a way of building a modern webapp with React/Redux, Node, and Postgres/GraphQL.
 
 This is as much an attempt to teach as it is to learn; I'd love to hear opinions and critiques on design choices, libraries used (or not used), code, anything really.  I'm always looking for ways to improve my skills and tool-chain.
 
-We'll break the blogpost two parts: frontend & backend.  If you wan to see the final code, see: .
+We'll break the blogpost into two parts: frontend & backend.  If you wan to see the final code, see: .
 
 ## Front end
 We're going to build a modern single-page application (SPA), which will talk to our backend using a combination of REST verbs and [GraphQL](http://graphql.org/docs/getting-started/) queries: `PUT`, `POST`, `PATCH`, and `DELETE`s will mutate our data, but `GET`s and searching will be done by querying a GraphQL server.  Some might rather use pure REST by making traditional `GET`s, by proxying that request to GraphQL (i.e., sending the GraphQL request from the server, rather than the client), which we will also show.
@@ -68,7 +68,7 @@ npm install css-loader node-sass sass-loader style-loader --save-dev
 These dependencies are required to compile our Sass files to CSS.
 
 ```bash
-npm install isomorphic-fetch react react-dom react-redux redux redux-thunk --save-dev
+npm install isomorphic-fetch react react-dom react-router react-redux redux redux-thunk --save-dev
 ```
 
 These are the core libraries we'll be using on the frontend.  React, Redux, and [isomorphic-fetch](https://github.com/matthew-andrews/isomorphic-fetch).
@@ -95,6 +95,7 @@ In the end, your `package.json` should look something like the following:
   "react": "^15.3.0",
   "react-dom": "^15.3.0",
   "react-redux": "^4.4.5",
+  "react-router": "^2.6.1",
   "redux": "^3.5.2",
   "redux-thunk": "^2.1.0",
   "sass-loader": "^4.0.0",
@@ -139,10 +140,99 @@ Create our `index.html` inside our `assets` folder:
 </html>
 ```
 
-At this point, we need to set up a static file server.  I like to use [node-static](https://github.com/cloudhead/node-static)
+At this point, we need to set up a static file server.  I like to use [node-static](https://github.com/cloudhead/node-static):
 ```bash
 > npm install -g node-static
 > static client/src/assets
 $ serving "client/src/assets" at http://127.0.0.1:8080
 ```
-Navigate to http://127.0.0.1:8080 in your browser.  Voila, you should see a ... black star.  Well that's a start.
+Navigate to http://127.0.0.1:8080 in your browser.  Voila, you should see a... black star.  Well, that's a start.
+
+#### Now the fun begins
+
+Let's build our React app.  Let's add a `js` folder that will hold all our application's javascript code.  Inside of it, create `init.js`, which will bootstrap our application using [react-router](https://github.com/reactjs/react-router).
+
+```bash
+mkdir -p client/src/assets/js
+touch client/src/assets/js/init.js
+```
+
+TODO: add stuff about building init.js
+
+Let's create our first React view inside a directory called `components`.
+
+```bash
+mkdir -p client/src/assets/js/components
+touch client/src/assets/js/components/App.jsx
+```
+
+TODO: add stuff about building App.jsx:
+
+Our `App.jsx` will look like this:
+
+```js
+
+```
+
+You might ask, *what's initializeSession?*  It's a Redux [action creator](http://redux.js.org/docs/basics/Actions.html).  We'll use it to bootstrap our application's session by checking for an existing authentication-token in LocalStorage.  If we find one, we'll ask the server to refresh it.  If we don't find one or if the token is expired (and thus the server refuses to refresh it for us), we can simply display the Login view.
+
+Let's build our first action and action creator.  Create a folder under `js` called `actions` and create a file named `sessionActions.js`:
+
+```bash
+mkdir -p client/src/assets/js/actions
+touch client/src/assets/js/actions/sessionActions.js
+```
+
+In `sessionActions.js`, we'll define our actions and action creators:
+
+```js
+export const WILL_INITIALIZE_SESSION = 'WILL_INITIALIZE_SESSION'
+export function willInitializeSession() {
+  return { type : WILL_INITIALIZE_SESSION}
+}
+
+export const DID_INITIALIZE_SESSION = 'DID_INITIALIZE_SESSION'
+export function didInitializeSession(user) {
+  return { type : DID_INITIALIZE_SESSION, user : user  }
+}
+
+export const INITIALIZE_SESSION = 'INITIALIZE_SESSION'
+export function initializeSession() {
+
+  return function(dispatch) {
+    dispatch(willInitializeSession());
+
+    const sessionTokenKey = '__SESSION_TOKEN__'
+    let token = localStorage.get(sessionTokenKey)
+    if (!token) {
+      return dispatch(didInitializeSession())
+    }
+
+    return fetch(url, {
+			credentials: 'same-origin',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'Authorization': 'JWT ' + token
+			}
+		})
+		.then((res) => {
+      debugger;
+      localStorage.set(sessionTokenKey, res.token);
+      dispatch(didInitializeSession(res.user));
+    });
+  }
+
+}
+```
+
+Here we have an asynchronous action creator that fires `willInitializeSession` and `didInitializeSession`.  
+
+We'll use the former to show a user-friendly loading screen and the latter to display either the login screen or the dashboard, depending on whether or not a user is returned by the server (i.e., the token is valid).
+
+How do we do that?  By adding a [reducer](http://redux.js.org/docs/basics/Reducers.html)!  Let's create a `reducers` folder and in it, `todoSaasApp.js`:
+
+```bash
+mkdir -p client/src/assets/js/reducers
+touch client/src/assets/js/reducers/todoSaasApp.js
+```
