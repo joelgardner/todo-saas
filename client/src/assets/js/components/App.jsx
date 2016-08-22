@@ -1,13 +1,13 @@
 import React from 'react'
-import AddressPanelContainer from './AddressPanelContainer.jsx'
-import MapPanelContainer from './MapPanelContainer.jsx'
+
 import { initializeSession } from '../actions/sessionActions'
 
-let App = ({ store }) => {
+let App = ({ store, children, isFetching }) => {
   return (
     <main className="o-grid o-grid--no-gutter o-panel">
-      <AddressPanelContainer />
-      <MapPanelContainer />
+      { isFetching
+        ? "loading..."
+        : children }
     </main>
   )
 }

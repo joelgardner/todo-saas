@@ -119,6 +119,103 @@ cp -R client/node_modules/material-design-icons/iconfont/* client/src/assets/sty
 cp client/node_modules/blaze/dist/blaze.min.css client/src/assets/style
 ```
 
+#### Webpack and [Make](https://www.gnu.org/software/make/)
+The last bit of setup we'll do for now is get Webpack up and running.  We'll also use a makefile to make it nice and simple to get up and running with Webpack and WebpackDevServer.
+
+Let's add a couple files for webpack: `webpack.config.js` and `webpack-dev-server.js`:
+
+```bash
+touch client/src/webpack.config.js
+touch client/src/webpack-dev-server.js
+```
+`webpack.config.js`:
+```js
+var ExtractTextPlugin = require("extract-text-webpack-plugin");
+module.exports = {
+    entry: ['./assets/js/init.js', './assets/style/sass/todosaas.scss'],
+    output: {
+        path: __dirname + "/assets/",
+        filename: 'js/bundle.js'
+    },
+    module: {
+        loaders: [{
+          test: __dirname,
+            loader: 'babel-loader',
+            exclude: /(node_modules|bower_components)/,
+            query: {
+        presets: ['react', 'es2015']
+      }
+        },
+        {
+            test: /\.scss$/,
+            loader: ExtractTextPlugin.extract("style-loader", "css-loader!sass-loader")
+        }]
+    },
+    plugins: [
+        new ExtractTextPlugin("style/baseline.css", { allChunks: true })
+    ]
+};
+```
+
+This is a configuration file required by webpack.  We're specifying two things:
+ - build `bundle.js` from entry point `init.js`
+ - build `todosaas.css` from entry point `todosaas.scss`
+
+`webpack-dev-server.js`:
+```js
+var webpack = require('webpack'),
+    WebpackDevServer = require('webpack-dev-server'),
+    extractTextPlugin = require('extract-text-webpack-plugin'),
+    webpackConfig = require('./webpack.config'),
+    compiler = webpack(webpackConfig);
+
+var devServer = new WebpackDevServer(compiler, {
+  contentBase : './assets',
+  publicPath : '/',
+  stats : {
+    colors : true
+  }
+});
+
+devServer.listen(9002);
+console.log("The Webpack Dev Server is running.")
+```
+This is the script that fires up WebpackDevServer.  It uses the webpack config file to instantaneously build our bundle.js or todosaas.css by keeping the files in memory and updating it when we save changes.  No waiting!
+
+
+Now for make, our root directory, create a `makefile`:
+```bash
+touch makefile
+```
+And add the following:
+
+```make
+install 					: install-server install-client
+
+install-server 		: server/package.json
+										cd server;		\
+										npm install;  \
+										cd ..;				\
+
+install-client		:	client/package.json
+										cd client;		\
+										npm install;	\
+										cd ..;				\
+
+build-client	:	client/src/webpack.config.js
+								cd client/src;			\
+								webpack;
+
+run-webpack-dev-server 	: client/src/webpack-dev-server.js
+													cd client/src;											\
+													node webpack-dev-server.js;
+
+```
+Note, the alignment here is wonky due to make's preferences for tabs over spaces.
+
+Now, we just need to run `make run-webpack-dev-server` so we can starting building our application!
+
+
 ### Enough already, show me something!
 
 Lots of boilerplate thus far.  Let's get something on the screen.
@@ -150,7 +247,7 @@ Navigate to http://127.0.0.1:8080 in your browser.  Voila, you should see a... b
 
 #### Now the fun begins
 
-Let's build our React app.  Let's add a `js` folder that will hold all our application's javascript code.  Inside of it, create `init.js`, which will bootstrap our application using [react-router](https://github.com/reactjs/react-router).
+Let's build our React app.  Add a `js` folder that will hold all our application's javascript code.  Inside of it, create `init.js`, which will bootstrap our application using [react-router](https://github.com/reactjs/react-router).
 
 ```bash
 mkdir -p client/src/assets/js

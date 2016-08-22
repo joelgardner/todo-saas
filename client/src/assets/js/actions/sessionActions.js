@@ -33,8 +33,9 @@ export function initializeSession() {
       return dispatch(didInitializeSession())
     }
 
-    return fetch(url, {
-			credentials: 'same-origin',
+    return fetch('/token', {
+			//credentials: 'same-origin',
+      method: 'post',
 			headers: {
 				'Accept': 'application/json',
 				'Content-Type': 'application/json',
