@@ -4,7 +4,7 @@ This is part one in a series of posts I'll write to show a way of building a mod
 
 This is as much an attempt to teach as it is to learn; I'd love to hear opinions and critiques on design choices, libraries used (or not used), code, anything really.  I'm always looking for ways to improve my skills and tool-chain.
 
-We'll break the blogpost into two parts: frontend & backend.  If you wan to see the final code, see: .
+We'll break the blogpost into two parts: frontend & backend.  If you want to see the final code, see: [https://github.com/joelgardner/todo-saas](https://github.com/joelgardner/todo-saas).
 
 ## Front end
 We're going to build a modern single-page application (SPA), which will talk to our backend using a combination of REST verbs and [GraphQL](http://graphql.org/docs/getting-started/) queries: `PUT`, `POST`, `PATCH`, and `DELETE`s will mutate our data, but `GET`s and searching will be done by querying a GraphQL server.  Some might rather use pure REST by making traditional `GET`s, by proxying that request to GraphQL (i.e., sending the GraphQL request from the server, rather than the client), which we will also show.
